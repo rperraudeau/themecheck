@@ -84,7 +84,7 @@ class Controller_results
 						$this->inlinescripts[]= "ga('send', 'event', 'theme', 'submit', 'stored');";
 				}
 			} else {
-				UserMessage::enqueue(__("Unvalid form"), ERRORLEVEL_FATAL);
+				UserMessage::enqueue(__("Invalid upload"), ERRORLEVEL_FATAL);
 			}
 		} else {
 			UserMessage::enqueue(__("No file uploaded."), ERRORLEVEL_FATAL);
