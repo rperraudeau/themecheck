@@ -27,7 +27,7 @@ class Controller_contact
 			$errors = array();
 			if(isset($_SESSION['token_'.$_POST['token']]))
 			{
-				unset($_SESSION['token_'.$_POST['token']]);
+				//unset($_SESSION['token_'.$_POST['token']]);
 				
 				if(empty($_POST['name'])) $errors['name'] = __("Required field");
 				if(empty($_POST['email'])) $errors['email'] = __("Required field");
@@ -37,41 +37,45 @@ class Controller_contact
 				// Send email
 				if(count($errors)==0)
 				{
-					require_once TC_INCDIR.'/Swift-4.3.0/lib/swift_required.php';
-    
-					$message = \Swift_Message::newInstance();
-					$message->setSubject('CONTACT THEMECHECK');
-					$message->setFrom(array('mailer@themecheck.org' => 'Themecheck.org'));
-					
-					$text = "Contact from : ".htmlspecialchars($_POST['name'])." : ".htmlspecialchars($_POST['email'])."<br>";
-					if(!empty($_POST['website'])) $text .= "Website: ".htmlspecialchars($_POST['website'])."<br>";
-					
-					$text .= "<br>Message:<br>";
-					$text .= nl2br(htmlspecialchars($_POST['message']));
-					
-					$message->setBody($text, 'text/html');
-					
-					$to = array();
-					$to[TC_CONTACT_MAIL] = TC_CONTACT_NAME;
-					
-					$message->setTo($to);
-					
-					if(TC_ENVIRONMENT == 'dev')
+					$testUrl = preg_match_all("#(<a[^>]*>)|(\[url=[^\]]*\])|(\[link=[^\]]*\])#isU", $_POST['message']);
+					if($testUrl!==false && $testUrl < 3)
 					{
-						// for unconfigured php.ini smtp use (xampp/wamp etc...):
-						$transport = \Swift_SmtpTransport::newInstance('smtp.gmail.com', 465, 'ssl') // or newInstance('smtp.example.org', 465, 'ssl') 
-							->setUsername('username')
-							->setPassword('password');
+						require_once TC_INCDIR.'/Swift-4.3.0/lib/swift_required.php';
+		
+						$message = \Swift_Message::newInstance();
+						$message->setSubject('CONTACT THEMECHECK');
+						$message->setFrom(array('mailer@themecheck.org' => 'Themecheck.org'));
+						
+						$text = "Contact from : ".htmlspecialchars($_POST['name'])." : ".htmlspecialchars($_POST['email'])."<br>";
+						if(!empty($_POST['website'])) $text .= "Website: ".htmlspecialchars($_POST['website'])."<br>";
+						
+						$text .= "<br>Message:<br>";
+						$text .= nl2br(htmlspecialchars($_POST['message']));
+						
+						$message->setBody($text, 'text/html');
+						
+						$to = array();
+						$to[TC_CONTACT_MAIL] = TC_CONTACT_NAME;
+						
+						$message->setTo($to);
+						
+						if(TC_ENVIRONMENT == 'dev')
+						{
+							// for unconfigured php.ini smtp use (xampp/wamp etc...):
+							$transport = \Swift_SmtpTransport::newInstance('smtp.gmail.com', 465, 'ssl') // or newInstance('smtp.example.org', 465, 'ssl') 
+								->setUsername('username')
+								->setPassword('password');
+						}
+						else
+						{
+							$transport = \Swift_SmtpTransport::newInstance();
+						}
+						
+						$mailer = \Swift_Mailer::newInstance($transport);
+						$test = $mailer->send($message);
+						
+						echo '<div class="container"><div class="alert alert-success">'. __("Message sent. We&#39;ll contact you soon.") .'</div><a href="'.TC_HTTPDOMAIN.'/'.Route::getInstance()->assemble(array("lang"=>I18N::getCurLang(), "phpfile"=>"index.php")).'">'.__("Back to home page").'</a></div>';
 					}
-					else
-					{
-						$transport = \Swift_SmtpTransport::newInstance();
-					}
-					
-					$mailer = \Swift_Mailer::newInstance($transport);
-					$test = $mailer->send($message);
-					
-					echo '<div class="container"><div class="alert alert-success">'. __("Message sent. We&#39;ll contact you soon.") .'</div><a href="'.TC_HTTPDOMAIN.'/'.Route::getInstance()->assemble(array("lang"=>I18N::getCurLang(), "phpfile"=>"index.php")).'">'.__("Back to home page").'</a></div>';
 				}
 			}
 			else
