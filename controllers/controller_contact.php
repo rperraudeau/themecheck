@@ -27,7 +27,7 @@ class Controller_contact
 			$errors = array();
 			if(isset($_SESSION['token_'.$_POST['token']]))
 			{
-				//unset($_SESSION['token_'.$_POST['token']]);
+				unset($_SESSION['token_'.$_POST['token']]);
 				
 				if(empty($_POST['name'])) $errors['name'] = __("Required field");
 				if(empty($_POST['email'])) $errors['email'] = __("Required field");
